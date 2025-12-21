@@ -5,20 +5,19 @@ const cors = require("cors");
 
 const app = express();
 
-/* ---------- Middleware ---------- */
+/* Middleware */
 app.use(cors());
 app.use(express.json());
 
-/* ---------- Routes ---------- */
-app.use("/auth", require("./routes/auth.routes"));
-app.use("/trucker", require("./routes/trucker.routes"));
+/* Routes */
+app.use("/api/auth", require("./routes/auth.routes"));
 
-/* ---------- Health Check ---------- */
+/* Health */
 app.get("/", (req, res) => {
   res.send("SmartLogix backend running");
 });
 
-/* ---------- Database Connection ---------- */
+/* DB + Server */
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
