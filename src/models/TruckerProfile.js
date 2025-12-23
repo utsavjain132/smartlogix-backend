@@ -1,4 +1,3 @@
-// src/models/TruckerProfile.js
 
 const mongoose = require("mongoose");
 
