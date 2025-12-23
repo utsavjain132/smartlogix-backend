@@ -1,16 +1,29 @@
+// src/controllers/business.controller.js
 
-const TruckerProfile = require("../models/BusinessProfile");
+const BusinessProfile = require("../models/BusinessProfile");
 
 exports.upsertProfile = async (req, res) => {
   try {
-    const { vehicleType, capacity, city, lat, lng } = req.body;
+    const {
+      businessName,
+      businessType,
+      contactPerson,
+      contactPhone,
+      city,
+      state
+    } = req.body;
 
-    const profile = await TruckerProfile.findOneAndUpdate(
+    const profile = await BusinessProfile.findOneAndUpdate(
       { userId: req.user.id },
       {
-        vehicleType,
-        capacity,
-        currentLocation: { city, lat, lng }
+        businessName,
+        businessType,
+        contactPerson,
+        contactPhone,
+        location: {
+          city,
+          state
+        }
       },
       { new: true, upsert: true }
     );
@@ -23,7 +36,7 @@ exports.upsertProfile = async (req, res) => {
 
 exports.getMyProfile = async (req, res) => {
   try {
-    const profile = await TruckerProfile.findOne({
+    const profile = await BusinessProfile.findOne({
       userId: req.user.id
     });
 
