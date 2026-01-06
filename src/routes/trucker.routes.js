@@ -1,5 +1,3 @@
-// src/routes/trucker.routes.js
-
 const express = require("express");
 const router = express.Router();
 
@@ -8,7 +6,9 @@ const role = require("../middleware/role.middleware");
 
 const {
   upsertProfile,
-  getMyProfile
+  getMyProfile,
+  updateLocation,
+  toggleStatus
 } = require("../controllers/trucker.controller");
 
 // Create / update trucker profile
@@ -26,5 +26,9 @@ router.get(
   role(["TRUCKER"]),
   getMyProfile
 );
+
+// Phase 2: Location & Status
+router.patch("/location", auth, role(["TRUCKER"]), updateLocation);
+router.patch("/status", auth, role(["TRUCKER"]), toggleStatus);
 
 module.exports = router;

@@ -14,14 +14,17 @@ app.use(express.json());
 
 /* Routes */
 app.use("/api/auth", require("./routes/auth.routes"));
-app.use("/trucker", require("./routes/trucker.routes"));
-app.use("/business", require("./routes/business.routes"));
-
+app.use("/api/trucker", require("./routes/trucker.routes"));
+app.use("/api/business", require("./routes/business.routes"));
+app.use("/api/loads", require("./routes/load.routes"));
 
 /* Health */
 app.get("/", (req, res) => {
   res.send("SmartLogix backend running");
 });
+
+/* Error Middleware */
+app.use(require("./middleware/error.middleware"));
 
 /* DB + Server */
 mongoose

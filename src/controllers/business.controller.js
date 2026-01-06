@@ -1,35 +1,31 @@
 // src/controllers/business.controller.js
 
 const BusinessProfile = require("../models/BusinessProfile");
+const { validateFields } = require("../utils/validation");
 
 exports.upsertProfile = async (req, res) => {
   try {
+    const required = ["businessName", "businessType", "contactPerson", "contactPhone"];
+    validateFields(req.body, required);
+
     const {
       businessName,
       businessType,
       contactPerson,
       contactPhone,
+      location,
       city,
-      state
+      state,
+      gstin // Phase 2
     } = req.body;
 
-    const profile = await BusinessProfile.findOneAndUpdate(
-      { userId: req.user.id },
-      {
-        businessName,
-        businessType,
-        contactPerson,
-        contactPhone,
-        location: {
-          city,
-          state
-        }
-      },
-      { new: true, upsert: true }
-    );
+    // Handle location whether passed as an object or flat fields
+    const locationData = location || { city, state };
+    if (!locationData.city) return res.status(400).json({ message: "City is required" });
 
     res.json(profile);
   } catch (err) {
+    console.error("Profile update error:", err);
     res.status(500).json({ message: "Profile update failed" });
   }
 };

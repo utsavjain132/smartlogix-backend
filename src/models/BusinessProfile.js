@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const businessProfileSchema = new mongoose.Schema(
@@ -19,6 +18,11 @@ const businessProfileSchema = new mongoose.Schema(
       type: String,
       required: true
       // e.g. Manufacturer, Distributor, Retailer, Logistics Broker
+    },
+
+    // Phase 2: Compliance
+    gstin: {
+      type: String
     },
 
     contactPerson: {

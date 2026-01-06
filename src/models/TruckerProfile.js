@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const truckerProfileSchema = new mongoose.Schema(
@@ -20,23 +19,46 @@ const truckerProfileSchema = new mongoose.Schema(
       required: true
     },
 
-    availability: {
+    // Phase 2: Online/Offline status
+    isOnline: {
       type: Boolean,
-      default: true
+      default: false
+    },
+    
+    // Phase 2: GeoJSON for location tracking
+    currentLocation: {
+      type: {
+        type: String,
+        enum: ["Point"]
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        index: "2dsphere" 
+      },
+      address: {
+        type: String // Readable city/address
+      },
+      lastUpdated: {
+        type: Date,
+        default: Date.now
+      }
     },
 
-    currentLocation: {
-      city: {
-        type: String,
-        required: true
-      },
-      lat: Number,
-      lng: Number
+    // Phase 2: Compliance
+    licensePlate: {
+      type: String
+    },
+    driverLicense: {
+      type: String
     }
   },
   {
     timestamps: true
   }
 );
+
+// Indexes
+truckerProfileSchema.index({ currentLocation: "2dsphere" });
+truckerProfileSchema.index({ isOnline: 1 });
 
 module.exports = mongoose.model("TruckerProfile", truckerProfileSchema);
