@@ -1,23 +1,29 @@
 // src/controllers/trucker.controller.js
 
 const TruckerProfile = require("../models/TruckerProfile");
+const { validationResult } = require("express-validator");
 const { validateFields } = require("../utils/validation");
+const logger = require("../utils/logger");
 
 exports.upsertProfile = async (req, res) => {
-  try {
-    const required = ["vehicleType", "capacity", "city"];
-    validateFields(req.body, required);
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
+  try {
     const { 
       vehicleType, 
       capacity, 
-      city, 
+      currentLocation,
       licensePlate, 
       driverLicense 
     } = req.body;
 
+    const city = currentLocation?.city || "Unknown";
+    logger.debug("Upserting trucker profile for user %s in %s", req.user.id, city);
+
     // Default to [0,0] if no coordinates provided yet
-    // In a real app, we'd geocode the city or require coords from UI
     const defaultCoords = [0, 0];
 
     const profile = await TruckerProfile.findOneAndUpdate(
@@ -25,6 +31,7 @@ exports.upsertProfile = async (req, res) => {
       {
         vehicleType,
         capacity,
+        availableCapacity: capacity, // Reset available capacity on profile update/create
         licensePlate,
         driverLicense,
         // Initialize location with a valid GeoJSON structure if it doesn't exist

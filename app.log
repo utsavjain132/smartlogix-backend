@@ -1,0 +1,46 @@
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:18:58"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:18:58"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:19:05"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:19:05"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:19:15"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:19:15"}
+{"level":"debug","message":"Signup attempt for email: utsav@utsav.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:23:49"}
+{"level":"error","message":"Signup error for utsav@utsav.com: User already exists","service":"smartlogix-backend","timestamp":"2026-02-06 21:23:49"}
+::ffff:127.0.0.1 - - [06/Feb/2026:15:53:49 +0000] "POST /api/auth/signup HTTP/1.1" 400 33 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+{"level":"debug","message":"Signup attempt for email: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:24:11"}
+{"level":"info","message":"User registered successfully: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:24:11"}
+::ffff:127.0.0.1 - - [06/Feb/2026:15:54:11 +0000] "POST /api/auth/signup HTTP/1.1" 201 42 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+{"level":"debug","message":"Login attempt for email: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:24:11"}
+{"level":"info","message":"User logged in: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:24:12"}
+::ffff:127.0.0.1 - - [06/Feb/2026:15:54:12 +0000] "POST /api/auth/login HTTP/1.1" 200 307 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:15:54:12 +0000] "POST /api/business/profile HTTP/1.1" 400 86 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+{"level":"debug","message":"Signup attempt for email: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:25:10"}
+{"level":"error","message":"Signup error for utsav@banja.com: User already exists","service":"smartlogix-backend","timestamp":"2026-02-06 21:25:10"}
+::ffff:127.0.0.1 - - [06/Feb/2026:15:55:10 +0000] "POST /api/auth/signup HTTP/1.1" 400 33 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+{"level":"debug","message":"Login attempt for email: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:25:30"}
+{"level":"info","message":"User logged in: utsav@banja.com","service":"smartlogix-backend","timestamp":"2026-02-06 21:25:31"}
+::ffff:127.0.0.1 - - [06/Feb/2026:15:55:31 +0000] "POST /api/auth/login HTTP/1.1" 200 307 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:15:55:31 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:15:55:31 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:27:29"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:27:29"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:28:03"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:28:03"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:28:12"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:28:12"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:28:21"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:28:21"}
+::ffff:127.0.0.1 - - [06/Feb/2026:16:11:01 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:16:11:01 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:48:25"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:48:25"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:48:49"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:48:49"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:49:02"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:49:02"}
+{"level":"info","message":"MongoDB connected","service":"smartlogix-backend","timestamp":"2026-02-06 21:50:06"}
+{"level":"info","message":"Server running on port 5000","service":"smartlogix-backend","timestamp":"2026-02-06 21:50:06"}
+::ffff:127.0.0.1 - - [06/Feb/2026:16:42:03 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:16:42:03 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:16:42:15 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"
+::ffff:127.0.0.1 - - [06/Feb/2026:16:42:15 +0000] "GET /api/business/profile/me HTTP/1.1" 404 31 "http://localhost:5173/" "Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0"

@@ -19,6 +19,11 @@ const truckerProfileSchema = new mongoose.Schema(
       required: true
     },
 
+    availableCapacity: {
+      type: Number,
+      default: 0
+    },
+
     // Phase 2: Online/Offline status
     isOnline: {
       type: Boolean,

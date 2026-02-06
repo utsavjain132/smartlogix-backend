@@ -2,9 +2,11 @@ const Load = require("../models/Load");
 const TruckerProfile = require("../models/TruckerProfile");
 const { validateTransition } = require("../utils/freightStateMachine");
 const { validateFields } = require("../utils/validation");
+const logger = require("../utils/logger");
 
 // --- Helper for Atomic Update ---
 const executeAtomicTransition = async (loadId, currentStatus, nextStatus, userId, updateFields = {}) => {
+  logger.debug("Attempting atomic transition for load %s from %s to %s by user %s", loadId, currentStatus, nextStatus, userId);
   const query = { 
     _id: loadId, 
     status: currentStatus
@@ -29,10 +31,15 @@ const executeAtomicTransition = async (loadId, currentStatus, nextStatus, userId
   if (!load) {
     // Check if load exists at all to give better error
     const check = await Load.findById(loadId);
-    if (!check) throw new Error("Load not found");
+    if (!check) {
+      logger.error("Load not found: %s", loadId);
+      throw new Error("Load not found");
+    }
+    logger.warn("Atomic transition failed for load %s. Expected %s but found %s", loadId, currentStatus, check.status);
     throw new Error(`Load status mismatch. Expected '${currentStatus}' but found '${check.status}'. Transition failed.`);
   }
 
+  logger.info("Load %s status updated to %s", loadId, nextStatus);
   return load;
 };
 
@@ -40,12 +47,13 @@ const executeAtomicTransition = async (loadId, currentStatus, nextStatus, userId
 
 exports.createLoad = async (req, res) => {
   try {
+    logger.debug("Creating new load for business user %s", req.user.id);
     const required = ["origin", "destination", "cargoType", "weight", "price", "pickupDate", "vehicleTypeRequired"];
     validateFields(req.body, required);
 
     const {
       origin, destination, cargoType, weight, price, pickupDate, vehicleTypeRequired,
-      originCoords, destinationCoords, distance 
+      originCoords, destinationCoords, distance, loadType 
     } = req.body;
 
     const originLocation = originCoords ? { type: "Point", coordinates: originCoords } : undefined;
@@ -63,12 +71,15 @@ exports.createLoad = async (req, res) => {
       pickupDate,
       vehicleTypeRequired,
       distance,
+      loadType: loadType || "FTL", // Default to FTL if not specified
       status: "POSTED",
       history: [{ status: "POSTED", updatedBy: req.user.id }]
     });
 
+    logger.info("New load created: %s", newLoad._id);
     res.status(201).json(newLoad);
   } catch (err) {
+    logger.error("Failed to create load: %s", err.message);
     res.status(400).json({ message: err.message });
   }
 };
@@ -114,7 +125,7 @@ exports.assignTrucker = async (req, res) => {
   try {
     const { loadId } = req.params;
     
-    // 1. Ownership check (Must find doc first to verify owner)
+    // 1. Ownership check
     const loadCheck = await Load.findById(loadId);
     if (!loadCheck) return res.status(404).json({ message: "Load not found" });
     if (String(loadCheck.createdBy) !== req.user.id) return res.status(403).json({ message: "Not authorized" });
@@ -122,15 +133,45 @@ exports.assignTrucker = async (req, res) => {
     // 2. Validate Transition
     validateTransition(loadCheck.status, "ASSIGNED", "BUSINESS");
 
-    // 3. Atomic Update
-    const updatedLoad = await executeAtomicTransition(
+    // 3. Check Trucker Capacity (Critical Step)
+    // We expect the business to provide the truckerId they are assigning to (normally chosen from applicants)
+    // But in our current flow, 'MATCHED' status implies `assignedTo` is already tentatively set to the Trucker who requested it.
+    // If not, we'd need `req.body.truckerId`.
+    const truckerId = loadCheck.assignedTo;
+    if (!truckerId) return res.status(400).json({ message: "No trucker has requested this load yet." });
+
+    const truckerProfile = await TruckerProfile.findOne({ userId: truckerId });
+    if (!truckerProfile) return res.status(404).json({ message: "Trucker profile not found" });
+
+    // Capacity Logic
+    if (loadCheck.loadType === "FTL") {
+      // For FTL, trucker must be effectively empty (available == total capacity)
+      if (truckerProfile.availableCapacity < truckerProfile.capacity) {
+        return res.status(400).json({ message: "Trucker does not have full capacity for FTL." });
+      }
+    } else {
+      // For PTL
+      if (truckerProfile.availableCapacity < loadCheck.weight) {
+        return res.status(400).json({ message: "Trucker does not have enough available capacity." });
+      }
+    }
+
+    // 4. Atomic Update Load
+    constupdatedLoad = await executeAtomicTransition(
       loadId, 
       "MATCHED", 
       "ASSIGNED", 
       req.user.id
     );
 
-    res.json({ message: "Trucker confirmed. Load assigned.", load: updatedLoad });
+    // 5. Update Trucker Capacity
+    // Decrease available capacity
+    await TruckerProfile.findOneAndUpdate(
+      { userId: truckerId },
+      { $inc: { availableCapacity: -loadCheck.weight } }
+    );
+
+    res.json({ message: "Trucker confirmed. Load assigned.", load: constupdatedLoad });
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -146,11 +187,13 @@ exports.cancelLoad = async (req, res) => {
 
     validateTransition(loadCheck.status, "CANCELLED", "BUSINESS");
 
-    // Atomic Update with flexible current status (POSTED or MATCHED)
-    // We reuse logic but need custom query for this specific case since executeAtomicTransition takes single string
-    // Or we just pass the current status we found. Race condition risk is small here but exists if status changed *after* find.
-    // Ideally we pass loadCheck.status. If it changed in between, the update fails, ensuring atomicity.
-    
+    // If load was already assigned/in_transit (though validateTransition blocks that for Business usually),
+    // we might need to restore capacity. But Business can usually only cancel POSTED or MATCHED.
+    // If we allow canceling ASSIGNED, we must restore capacity.
+    // Our state machine says MATCHED -> CANCELLED is allowed.
+    // If ASSIGNED -> CANCELLED were allowed, we'd need logic here.
+    // Current state machine: POSTED->CANCELLED, MATCHED->CANCELLED. No capacity taken yet.
+
     const updatedLoad = await executeAtomicTransition(
       loadId, 
       loadCheck.status, 
@@ -192,12 +235,24 @@ exports.closeLoad = async (req, res) => {
 
 exports.getAvailableLoads = async (req, res) => {
   try {
+    const { radius } = req.query;
+    const maxDistance = radius ? parseInt(radius) * 1000 : 100000; // Convert km to meters, default 100km
+
     const truckerProfile = await TruckerProfile.findOne({ userId: req.user.id });
     
     let query = { status: "POSTED" };
     
     if (truckerProfile) {
-      query.weight = { $lte: truckerProfile.capacity };
+      // Capacity check logic for query
+      // We only show loads they can potentially take
+      // If they have 5 tons available, don't show 10 ton loads
+      query.weight = { $lte: truckerProfile.availableCapacity };
+      
+      // If FTL, they must have full capacity. If not full capacity, hide FTLs.
+      if (truckerProfile.availableCapacity < truckerProfile.capacity) {
+         query.loadType = "PTL"; // Can only see PTL if partially full
+      }
+
       query.vehicleTypeRequired = truckerProfile.vehicleType;
       
       if (truckerProfile.currentLocation && truckerProfile.currentLocation.coordinates && truckerProfile.currentLocation.coordinates.length === 2) {
@@ -206,7 +261,7 @@ exports.getAvailableLoads = async (req, res) => {
              query.originLocation = {
                  $near: {
                      $geometry: { type: "Point", coordinates: [lng, lat] },
-                     $maxDistance: 100000 
+                     $maxDistance: maxDistance
                  }
              };
          }
@@ -233,14 +288,19 @@ exports.acceptLoad = async (req, res) => {
   try {
     const { loadId } = req.params;
     
-    // We can skip ownership check for accepting, BUT we must ensure status is POSTED
-    // If multiple truckers click Accept at same time, only one wins due to atomic update on POSTED status
-    
-    // Pre-check for better error message (optional, but good for UX)
     const loadCheck = await Load.findById(loadId);
     if (!loadCheck) return res.status(404).json({ message: "Load not found" });
     
     validateTransition(loadCheck.status, "MATCHED", "TRUCKER");
+
+    // Preliminary Capacity Check
+    const truckerProfile = await TruckerProfile.findOne({ userId: req.user.id });
+    if (loadCheck.loadType === "FTL" && truckerProfile.availableCapacity < truckerProfile.capacity) {
+        return res.status(400).json({ message: "You must be empty to accept an FTL load." });
+    }
+    if (truckerProfile.availableCapacity < loadCheck.weight) {
+        return res.status(400).json({ message: "Insufficient capacity for this load." });
+    }
 
     const updatedLoad = await executeAtomicTransition(
       loadId, 
@@ -294,6 +354,12 @@ exports.deliverLoad = async (req, res) => {
       "IN_TRANSIT", 
       "DELIVERED", 
       req.user.id
+    );
+
+    // Restore Capacity on Delivery
+    await TruckerProfile.findOneAndUpdate(
+      { userId: req.user.id },
+      { $inc: { availableCapacity: loadCheck.weight } }
     );
 
     res.json({ message: "Load delivered", load: updatedLoad });

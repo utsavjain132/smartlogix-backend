@@ -39,6 +39,12 @@ const loadSchema = new mongoose.Schema(
 
     vehicleTypeRequired: { type: String, required: true },
     cargoType: { type: String, required: true },
+    loadType: {
+      type: String,
+      enum: ["FTL", "PTL"],
+      required: true,
+      default: "FTL"
+    },
     weight: { type: Number, required: true },
     price: { type: Number, required: true },
     distance: { type: Number },

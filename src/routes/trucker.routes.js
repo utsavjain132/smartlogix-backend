@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { body } = require("express-validator");
 
 const auth = require("../middleware/auth.middleware");
 const role = require("../middleware/role.middleware");
@@ -16,6 +17,11 @@ router.post(
   "/profile",
   auth,
   role(["TRUCKER"]),
+  [
+    body("vehicleType").notEmpty().withMessage("Vehicle type is required").trim(),
+    body("capacity").isNumeric().withMessage("Capacity must be a number"),
+    body("currentLocation.city").notEmpty().withMessage("City is required").trim(),
+  ],
   upsertProfile
 );
 

@@ -1,13 +1,16 @@
 // src/controllers/business.controller.js
 
 const BusinessProfile = require("../models/BusinessProfile");
+const { validationResult } = require("express-validator");
 const { validateFields } = require("../utils/validation");
 
 exports.upsertProfile = async (req, res) => {
-  try {
-    const required = ["businessName", "businessType", "contactPerson", "contactPhone"];
-    validateFields(req.body, required);
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
+  try {
     const {
       businessName,
       businessType,
@@ -22,6 +25,19 @@ exports.upsertProfile = async (req, res) => {
     // Handle location whether passed as an object or flat fields
     const locationData = location || { city, state };
     if (!locationData.city) return res.status(400).json({ message: "City is required" });
+
+    const profile = await BusinessProfile.findOneAndUpdate(
+      { userId: req.user.id },
+      {
+        businessName,
+        businessType,
+        contactPerson,
+        contactPhone,
+        location: locationData,
+        gstin
+      },
+      { new: true, upsert: true }
+    );
 
     res.json(profile);
   } catch (err) {
